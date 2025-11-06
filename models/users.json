@@ -1,0 +1,43 @@
+[
+  {
+    "id": "9d7ead18-c772-4307-99ef-160ccdba43c9",
+    "name": "Anish",
+    "email": "anish.mitra63@gmail.com",
+    "password": "$2a$12$uAzljjs77OerHTgjZAH2HOEeBVg1CqC5fD.k47g7ilJHRAop/NJie",
+    "createdAt": "2025-09-25T04:42:34.446Z",
+    "updatedAt": "2025-09-25T04:42:34.446Z"
+  },
+  {
+    "id": "206f7e4b-4031-4292-b477-73a01ace6ec9",
+    "name": "Aditya",
+    "email": "aditya.singh@gmail.com",
+    "password": "$2a$12$ldanu0FN8zr2GJDWbWPVXOMZKlX71zyFScPxDFJUD4iuk67TD9W36",
+    "createdAt": "2025-09-25T04:53:00.757Z",
+    "updatedAt": "2025-09-25T04:53:00.757Z"
+  },
+  {
+    "id": "50c0bc8e-551a-40cc-a685-6d8c39f081cc",
+    "name": "vikas",
+    "email": "vikas.sharma@biz4group.com",
+    "password": "$2a$12$StDN5CJK1RtW.WHAMDEH5umOClfYVoTRazuPTsDycbaROU0Z7l3Cy",
+    "createdAt": "2025-09-30T06:39:32.373Z",
+    "updatedAt": "2025-09-30T06:39:32.373Z"
+  },
+  {
+    "id": "4561a6a4-d442-4f79-908a-550bc2e6a93c",
+    "name": "abhi",
+    "email": "abhishek.kumawat@biz4group.com",
+    "password": "$2a$12$39k2vH9AHigZ2nrR87qptO7txSgMHrHlbH7mr0hVGHJoHjqQCnVwu",
+    "createdAt": "2025-09-30T07:30:00.297Z",
+    "updatedAt": "2025-09-30T07:30:00.297Z"
+  },
+  {
+    "id": "8b593158-891f-4091-bd6d-8c3de0ff7882",
+    "name": "brian",
+    "email": "anish.mitra@biz4group.com",
+    "password": "$2a$12$2rRT..TXSLCjameHV6HSNugqgRJ7sw/IkkzuSebFmzXABAW5vcOjW",
+    "isEmailVerified": true,
+    "createdAt": "2025-10-07T08:53:11.543Z",
+    "updatedAt": "2025-10-07T08:58:12.581Z"
+  }
+]

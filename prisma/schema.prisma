@@ -1,0 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(uuid())
+  name              String
+  email             String    @unique
+  password          String?   // Optional for OAuth users
+  isEmailVerified   Boolean   @default(false)
+  
+  // OAuth fields
+  provider          String    @default("local") // "local", "google", "facebook", etc.
+  providerId        String?   // OAuth provider's user ID
+  avatar            String?   // Profile picture URL from OAuth
+  isSocialLogin     Boolean   @default(false) // True if user signed up via OAuth
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // OTP fields for signup verification
+  signupOTP         Json?
+  
+  // OTP fields for password reset
+  passwordResetOTP  Json?
+  
+  @@unique([provider, providerId])
+  @@map("users")
+}
