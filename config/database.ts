@@ -8,12 +8,21 @@ let prisma: PrismaClient | undefined;
 const createPrismaClient = (): PrismaClient => {
   // Build DATABASE_URL with connection pooling parameters
   const databaseUrl = new URL(process.env.DATABASE_URL!);
-  
+
   // Add connection pooling parameters to the URL
-  databaseUrl.searchParams.set('connection_limit', process.env.DB_POOL_SIZE || '10');
-  databaseUrl.searchParams.set('pool_timeout', process.env.DB_POOL_TIMEOUT || '20');
-  databaseUrl.searchParams.set('connect_timeout', process.env.DB_CONNECT_TIMEOUT || '60');
-  
+  databaseUrl.searchParams.set(
+    'connection_limit',
+    process.env.DB_POOL_SIZE || '10'
+  );
+  databaseUrl.searchParams.set(
+    'pool_timeout',
+    process.env.DB_POOL_TIMEOUT || '20'
+  );
+  databaseUrl.searchParams.set(
+    'connect_timeout',
+    process.env.DB_CONNECT_TIMEOUT || '60'
+  );
+
   return new PrismaClient({
     datasources: {
       db: {
@@ -21,14 +30,14 @@ const createPrismaClient = (): PrismaClient => {
       },
     },
     log: ['error'], // Only log errors, no queries
-    
+
     // Additional Prisma configuration
     errorFormat: 'pretty',
-    
+
     // Transaction options
     transactionOptions: {
       maxWait: parseInt(process.env.DB_TRANSACTION_MAX_WAIT || '5000'), // 5 seconds
-      timeout: parseInt(process.env.DB_TRANSACTION_TIMEOUT || '10000'),  // 10 seconds
+      timeout: parseInt(process.env.DB_TRANSACTION_TIMEOUT || '10000'), // 10 seconds
     },
   });
 };
@@ -47,11 +56,11 @@ export const initializeDatabase = async (): Promise<PrismaClient> => {
     const client = getPrismaClient();
     await client.$connect();
     console.log('✅ Database connected successfully with connection pooling');
-    
+
     // Test the connection
     await client.$queryRaw`SELECT 1`;
     console.log('✅ Database connection test passed');
-    
+
     return client;
   } catch (error) {
     if (error instanceof Error) {
@@ -79,10 +88,10 @@ export const checkDatabaseHealth = async (): Promise<DatabaseHealthCheck> => {
     return { status: 'healthy', timestamp: new Date().toISOString() };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    return { 
-      status: 'unhealthy', 
-      error: errorMessage, 
-      timestamp: new Date().toISOString() 
+    return {
+      status: 'unhealthy',
+      error: errorMessage,
+      timestamp: new Date().toISOString(),
     };
   }
 };

@@ -53,11 +53,13 @@ Backend/
 ## Installation & Setup
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 2. Environment Configuration
+
 Copy `.env.example` to `.env` and update the values:
 
 ```env
@@ -79,11 +81,13 @@ FRONTEND_URL=http://localhost:3000
 ### 3. Start the Server
 
 **Development:**
+
 ```bash
 npm run dev
 ```
 
 **Production:**
+
 ```bash
 npm start
 ```
@@ -95,9 +99,11 @@ The server will start on `http://localhost:5000`
 ### Public Endpoints
 
 #### POST /api/auth/signup
+
 Register a new user.
 
 **Request Body:**
+
 ```json
 {
   "name": "John Doe",
@@ -107,6 +113,7 @@ Register a new user.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -122,9 +129,11 @@ Register a new user.
 ```
 
 #### POST /api/auth/login
+
 Login with email and password.
 
 **Request Body:**
+
 ```json
 {
   "email": "john@example.com",
@@ -133,6 +142,7 @@ Login with email and password.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -150,9 +160,11 @@ Login with email and password.
 ### Protected Endpoints (Require Authentication)
 
 #### GET /api/auth/me
+
 Get current user information.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -167,9 +179,11 @@ Get current user information.
 ```
 
 #### POST /api/auth/logout
+
 Logout user (clears JWT cookie).
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -178,9 +192,11 @@ Logout user (clears JWT cookie).
 ```
 
 #### POST /api/auth/refresh
+
 Refresh JWT token.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -189,9 +205,11 @@ Refresh JWT token.
 ```
 
 #### PUT /api/auth/change-password
+
 Change user password.
 
 **Request Body:**
+
 ```json
 {
   "currentPassword": "OldPass123!",
@@ -200,9 +218,11 @@ Change user password.
 ```
 
 #### PUT /api/auth/profile
+
 Update user profile.
 
 **Request Body:**
+
 ```json
 {
   "name": "Jane Doe",
@@ -213,42 +233,49 @@ Update user profile.
 ## Validation Rules
 
 ### Signup Validation
+
 - **Name**: Required, 2-50 characters
 - **Email**: Required, valid email format, unique
 - **Password**: Required, minimum 8 characters with:
   - At least one uppercase letter
   - At least one lowercase letter
   - At least one number
-  - At least one special character (@$!%*?&)
+  - At least one special character (@$!%\*?&)
 
 ### Login Validation
+
 - **Email**: Required, valid email format
 - **Password**: Required, non-empty
 
 ## Security Features
 
 ### JWT Authentication
+
 - Tokens stored in httpOnly cookies
 - Secure and SameSite flags in production
 - Configurable expiration time
 - Token refresh capability
 
 ### Password Security
+
 - bcrypt hashing with salt rounds of 12
 - Password strength validation
 - Secure password comparison
 
 ### Rate Limiting
+
 - 100 requests per 15-minute window per IP
 - Automatic cleanup of old request data
 - Configurable limits
 
 ### CORS Protection
+
 - Configurable allowed origins
 - Credentials support for cookies
 - Preflight request handling
 
 ### Security Headers
+
 - X-Content-Type-Options: nosniff
 - X-Frame-Options: DENY
 - X-XSS-Protection: 1; mode=block
@@ -291,13 +318,16 @@ The API returns consistent error responses:
 ## Development
 
 ### Available Scripts
+
 - `npm start` - Start production server
 - `npm run dev` - Start development server with nodemon
 
 ### Environment Variables
+
 All configuration is handled through environment variables. See `.env.example` for all available options.
 
 ### Logging
+
 The server logs all requests with timestamps and includes detailed error logging in development mode.
 
 ## Production Deployment
@@ -312,6 +342,7 @@ The server logs all requests with timestamps and includes detailed error logging
 ## Testing
 
 You can test the API using tools like:
+
 - **Postman** - Import the API collection
 - **curl** - Command line testing
 - **Thunder Client** - VS Code extension

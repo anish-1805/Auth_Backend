@@ -1,5 +1,12 @@
 import { getPrismaClient } from '../config/database.js';
-import { User, CreateUserData, UpdateUserData, OAuthUserData, OTPData } from '../types/index.js';
+import { Prisma } from '@prisma/client';
+import {
+  User,
+  CreateUserData,
+  UpdateUserData,
+  OAuthUserData,
+  OTPData,
+} from '../types/index.js';
 
 const prisma = getPrismaClient();
 
@@ -25,8 +32,8 @@ class UserModel {
     try {
       return await prisma.user.findUnique({
         where: {
-          email: email.toLowerCase()
-        }
+          email: email.toLowerCase(),
+        },
       });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -38,7 +45,7 @@ class UserModel {
   static async findById(id: string): Promise<User | null> {
     try {
       return await prisma.user.findUnique({
-        where: { id }
+        where: { id },
       });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -61,10 +68,10 @@ class UserModel {
           name: userData.name,
           email: userData.email.toLowerCase(),
           password: userData.password,
-          isEmailVerified: false
-        }
+          isEmailVerified: false,
+        },
       });
-      
+
       return newUser;
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -73,15 +80,23 @@ class UserModel {
   }
 
   // Update user
-  static async updateById(id: string, updateData: UpdateUserData): Promise<User> {
+  static async updateById(
+    id: string,
+    updateData: UpdateUserData
+  ): Promise<User> {
     try {
       const updatedUser = await prisma.user.update({
         where: { id },
-        data: updateData
+        data: updateData,
       });
       return updatedUser;
     } catch (error) {
-      if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'P2025'
+      ) {
         throw new Error('User not found');
       }
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -93,11 +108,16 @@ class UserModel {
   static async deleteById(id: string): Promise<User> {
     try {
       const deletedUser = await prisma.user.delete({
-        where: { id }
+        where: { id },
       });
       return deletedUser;
     } catch (error) {
-      if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'P2025'
+      ) {
         throw new Error('User not found');
       }
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -109,7 +129,7 @@ class UserModel {
   static async findAll(): Promise<User[]> {
     try {
       return await prisma.user.findMany({
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
       });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -137,13 +157,18 @@ class UserModel {
             otp: otpData.otp,
             expiryTime: otpData.expiryTime,
             createdAt: otpData.createdAt,
-            isUsed: false
-          }
-        }
+            isUsed: false,
+          },
+        },
       });
       return updatedUser;
     } catch (error) {
-      if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'P2025'
+      ) {
         throw new Error('User not found');
       }
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -152,7 +177,10 @@ class UserModel {
   }
 
   // Store OTP for password reset
-  static async storePasswordResetOTP(email: string, otpData: OTPData): Promise<User> {
+  static async storePasswordResetOTP(
+    email: string,
+    otpData: OTPData
+  ): Promise<User> {
     try {
       const updatedUser = await prisma.user.update({
         where: { email: email.toLowerCase() },
@@ -161,13 +189,18 @@ class UserModel {
             otp: otpData.otp,
             expiryTime: otpData.expiryTime,
             createdAt: otpData.createdAt,
-            isUsed: false
-          }
-        }
+            isUsed: false,
+          },
+        },
       });
       return updatedUser;
     } catch (error) {
-      if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'P2025'
+      ) {
         throw new Error('User not found');
       }
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -192,11 +225,16 @@ class UserModel {
         where: { email: email.toLowerCase() },
         data: {
           signupOTP: {
-            ...(user.signupOTP as { otp: string; expiryTime: string; createdAt: string; isUsed: boolean }),
-            isUsed: true
+            ...(user.signupOTP as {
+              otp: string;
+              expiryTime: string;
+              createdAt: string;
+              isUsed: boolean;
+            }),
+            isUsed: true,
           },
-          isEmailVerified: true
-        }
+          isEmailVerified: true,
+        },
       });
 
       return updatedUser;
@@ -207,7 +245,10 @@ class UserModel {
   }
 
   // Verify and mark password reset OTP as used
-  static async verifyPasswordResetOTP(email: string, _otp: string): Promise<User> {
+  static async verifyPasswordResetOTP(
+    email: string,
+    _otp: string
+  ): Promise<User> {
     try {
       const user = await this.findByEmail(email);
       if (!user) {
@@ -223,10 +264,15 @@ class UserModel {
         where: { email: email.toLowerCase() },
         data: {
           passwordResetOTP: {
-            ...(user.passwordResetOTP as { otp: string; expiryTime: string; createdAt: string; isUsed: boolean }),
-            isUsed: true
-          }
-        }
+            ...(user.passwordResetOTP as {
+              otp: string;
+              expiryTime: string;
+              createdAt: string;
+              isUsed: boolean;
+            }),
+            isUsed: true,
+          },
+        },
       });
 
       return updatedUser;
@@ -237,26 +283,37 @@ class UserModel {
   }
 
   // Clear OTP data after successful verification
-  static async clearOTPData(email: string, otpType: 'signup' | 'passwordReset' | 'both' = 'both'): Promise<User> {
+  static async clearOTPData(
+    email: string,
+    otpType: 'signup' | 'passwordReset' | 'both' = 'both'
+  ): Promise<User> {
     try {
-      const updateData: { signupOTP?: null; passwordResetOTP?: null } = {};
-      
+      const updateData: {
+        signupOTP?: typeof Prisma.DbNull;
+        passwordResetOTP?: typeof Prisma.DbNull;
+      } = {};
+
       if (otpType === 'signup' || otpType === 'both') {
-        updateData.signupOTP = null;
+        updateData.signupOTP = Prisma.DbNull;
       }
-      
+
       if (otpType === 'passwordReset' || otpType === 'both') {
-        updateData.passwordResetOTP = null;
+        updateData.passwordResetOTP = Prisma.DbNull;
       }
 
       const updatedUser = await prisma.user.update({
         where: { email: email.toLowerCase() },
-        data: updateData
+        data: updateData,
       });
 
       return updatedUser;
     } catch (error) {
-      if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'P2025'
+      ) {
         throw new Error('User not found');
       }
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -270,7 +327,10 @@ class UserModel {
   }
 
   // Find user by OAuth provider and provider ID
-  static async findByProviderId(provider: string, providerId: string): Promise<User | null> {
+  static async findByProviderId(
+    provider: string,
+    providerId: string
+  ): Promise<User | null> {
     try {
       return await prisma.user.findUnique({
         where: {
@@ -310,7 +370,10 @@ class UserModel {
   }
 
   // Link OAuth account to existing user
-  static async linkOAuthAccount(userId: string, oauthData: Partial<OAuthUserData>): Promise<User> {
+  static async linkOAuthAccount(
+    userId: string,
+    oauthData: Partial<OAuthUserData>
+  ): Promise<User> {
     try {
       const updatedUser = await prisma.user.update({
         where: { id: userId },
@@ -325,7 +388,12 @@ class UserModel {
 
       return updatedUser;
     } catch (error) {
-      if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'P2025'
+      ) {
         throw new Error('User not found');
       }
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -337,7 +405,10 @@ class UserModel {
   static async findOrCreateOAuthUser(oauthData: OAuthUserData): Promise<User> {
     try {
       // First, try to find by provider and providerId
-      let user = await this.findByProviderId(oauthData.provider, oauthData.providerId);
+      let user = await this.findByProviderId(
+        oauthData.provider,
+        oauthData.providerId
+      );
 
       if (user) {
         return user;

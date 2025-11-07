@@ -2,24 +2,33 @@ import { Request, Response, NextFunction } from 'express';
 import { CustomError } from '../types/index.js';
 
 // Global error handling middleware
-export const errorHandler = (err: CustomError, _req: Request, res: Response, _next: NextFunction): void => {
+export const errorHandler = (
+  err: CustomError,
+  _req: Request,
+  res: Response,
+  _next: NextFunction
+): void => {
   console.error('Error:', err);
 
   // Default error
   let error = {
     success: false,
     message: err.message || 'Internal Server Error',
-    statusCode: err.statusCode || 500
+    statusCode: err.statusCode || 500,
   };
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
-    const errors = err.errors as Record<string, { message: string }> | undefined;
-    const message = Object.values(errors || {}).map((val) => val.message).join(', ');
+    const errors = err.errors as
+      | Record<string, { message: string }>
+      | undefined;
+    const message = Object.values(errors || {})
+      .map((val) => val.message)
+      .join(', ');
     error = {
       success: false,
       message: `Validation Error: ${message}`,
-      statusCode: 400
+      statusCode: 400,
     };
   }
 
@@ -29,7 +38,7 @@ export const errorHandler = (err: CustomError, _req: Request, res: Response, _ne
     error = {
       success: false,
       message: `${field} already exists`,
-      statusCode: 409
+      statusCode: 409,
     };
   }
 
@@ -38,7 +47,7 @@ export const errorHandler = (err: CustomError, _req: Request, res: Response, _ne
     error = {
       success: false,
       message: 'Invalid token',
-      statusCode: 401
+      statusCode: 401,
     };
   }
 
@@ -46,7 +55,7 @@ export const errorHandler = (err: CustomError, _req: Request, res: Response, _ne
     error = {
       success: false,
       message: 'Token expired',
-      statusCode: 401
+      statusCode: 401,
     };
   }
 
@@ -55,7 +64,7 @@ export const errorHandler = (err: CustomError, _req: Request, res: Response, _ne
     error = {
       success: false,
       message: 'File not found',
-      statusCode: 404
+      statusCode: 404,
     };
   }
 
@@ -63,7 +72,7 @@ export const errorHandler = (err: CustomError, _req: Request, res: Response, _ne
     error = {
       success: false,
       message: 'Permission denied',
-      statusCode: 403
+      statusCode: 403,
     };
   }
 
@@ -71,19 +80,25 @@ export const errorHandler = (err: CustomError, _req: Request, res: Response, _ne
   res.status(error.statusCode).json({
     success: error.success,
     message: error.message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };
 
 // 404 handler
-export const notFoundHandler = (req: Request, _res: Response, next: NextFunction): void => {
+export const notFoundHandler = (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): void => {
   const error: CustomError = new Error(`Route ${req.originalUrl} not found`);
   error.statusCode = 404;
   next(error);
 };
 
 // Async error wrapper
-export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) => {
+export const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
+) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };

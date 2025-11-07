@@ -10,21 +10,25 @@ async function seedDatabase() {
 
     // Read existing users from JSON file
     const usersFilePath = path.join(process.cwd(), 'models', 'users.json');
-    
+
     let existingUsers = [];
     try {
       const data = await fs.readFile(usersFilePath, 'utf8');
       existingUsers = JSON.parse(data);
       console.log(`📄 Found ${existingUsers.length} users in JSON file`);
     } catch (error) {
-      console.log('📄 No existing users.json file found, starting with empty database');
+      console.log(
+        '📄 No existing users.json file found, starting with empty database'
+      );
       return;
     }
 
     // Check if users already exist in database
     const userCount = await prisma.user.count();
     if (userCount > 0) {
-      console.log(`⚠️  Database already contains ${userCount} users. Skipping seed.`);
+      console.log(
+        `⚠️  Database already contains ${userCount} users. Skipping seed.`
+      );
       return;
     }
 
@@ -41,18 +45,20 @@ async function seedDatabase() {
             signupOTP: user.signupOTP || null,
             passwordResetOTP: user.passwordResetOTP || null,
             createdAt: new Date(user.createdAt),
-            updatedAt: new Date(user.updatedAt)
-          }
+            updatedAt: new Date(user.updatedAt),
+          },
         });
         console.log(`✅ Migrated user: ${user.email}`);
       } catch (error) {
-        console.error(`❌ Failed to migrate user ${user.email}:`, error.message);
+        console.error(
+          `❌ Failed to migrate user ${user.email}:`,
+          error.message
+        );
       }
     }
 
     const finalCount = await prisma.user.count();
     console.log(`🎉 Database seeding completed! Total users: ${finalCount}`);
-
   } catch (error) {
     console.error('❌ Database seeding failed:', error);
     throw error;
@@ -62,8 +68,7 @@ async function seedDatabase() {
 }
 
 // Run the seed function
-seedDatabase()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+seedDatabase().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

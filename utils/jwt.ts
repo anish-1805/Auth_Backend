@@ -17,7 +17,7 @@ export const generateToken = (payload: JWTPayload): string => {
     const options = {
       expiresIn: JWT_EXPIRES_IN,
       issuer: 'auth-backend',
-      audience: 'auth-frontend'
+      audience: 'auth-frontend',
     } as SignOptions;
     return jwt.sign(payload, JWT_SECRET!, options);
   } catch (error) {
@@ -30,7 +30,7 @@ export const verifyToken = (token: string): DecodedToken => {
   try {
     return jwt.verify(token, JWT_SECRET!, {
       issuer: 'auth-backend',
-      audience: 'auth-frontend'
+      audience: 'auth-frontend',
     }) as DecodedToken;
   } catch (error) {
     if (error instanceof Error) {
@@ -61,7 +61,7 @@ export const generateRefreshToken = (payload: JWTPayload): string => {
     const options = {
       expiresIn: '30d', // Refresh tokens last longer
       issuer: 'auth-backend',
-      audience: 'auth-frontend'
+      audience: 'auth-frontend',
     } as SignOptions;
     return jwt.sign(payload, JWT_SECRET!, options);
   } catch (error) {
@@ -73,24 +73,24 @@ export const generateRefreshToken = (payload: JWTPayload): string => {
 export const getCookieOptions = (): CookieOptions => {
   const isProduction = process.env.NODE_ENV === 'production';
   const cookieExpiresIn = parseInt(process.env.COOKIE_EXPIRES_IN || '7');
-  
+
   return {
     expires: new Date(Date.now() + cookieExpiresIn * 24 * 60 * 60 * 1000), // Convert days to milliseconds
     httpOnly: true, // Prevent XSS attacks
     secure: isProduction, // Use secure cookies in production
     sameSite: isProduction ? 'strict' : 'lax', // CSRF protection
-    path: '/' // Cookie available for all routes
+    path: '/', // Cookie available for all routes
   };
 };
 
 // Clear cookie options
 export const getClearCookieOptions = (): Omit<CookieOptions, 'expires'> => {
   const isProduction = process.env.NODE_ENV === 'production';
-  
+
   return {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? 'strict' : 'lax',
-    path: '/'
+    path: '/',
   };
 };

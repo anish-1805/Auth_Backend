@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
@@ -7,11 +8,13 @@ import { configureGoogleStrategy } from './config/passport.js';
 import authRoutes from './routes/authRoutes.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import UserModel from './models/userModel.js';
+import socketService from './services/socketService.js';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
@@ -21,7 +24,7 @@ const corsOptions = {
   credentials: true, // Allow cookies to be sent
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 200 // For legacy browser support
+  optionsSuccessStatus: 200, // For legacy browser support
 };
 
 // Middleware
@@ -34,16 +37,24 @@ app.use(cookieParser());
 app.use(passport.initialize());
 configureGoogleStrategy();
 
+// Initialize Socket.IO
+const corsOrigins = [
+  FRONTEND_URL,
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+];
+socketService.initialize(httpServer, corsOrigins);
+
 // Security headers
 app.use((_req: Request, res: Response, next: NextFunction) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
+
   // Remove X-Powered-By header
   res.removeHeader('X-Powered-By');
-  
+
   next();
 });
 
@@ -61,7 +72,7 @@ app.get('/', (_req: Request, res: Response) => {
     message: 'Auth Backend API is running!',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
   });
 });
 
@@ -104,13 +115,14 @@ async function startServer(): Promise<void> {
   try {
     // Initialize database connection
     await UserModel.initialize();
-    
+
     // Start server
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log('\n🚀 Auth Backend Server Started!');
       console.log(`📍 Server running on: http://localhost:${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🔗 Frontend URL: ${FRONTEND_URL}`);
+      console.log(`💬 Socket.IO: Enabled`);
       console.log(`📅 Started at: ${new Date().toISOString()}`);
       console.log('\n📋 Available endpoints:');
       console.log('   GET  /                     - Health check');
@@ -124,6 +136,9 @@ async function startServer(): Promise<void> {
       console.log('   PUT  /api/auth/profile     - Update profile');
       console.log('   GET  /api/auth/google      - Google OAuth login');
       console.log('   GET  /api/auth/google/callback - Google OAuth callback');
+      console.log('\n💬 Socket.IO Features:');
+      console.log('   - Real-time chatbot with Gemini AI');
+      console.log('   - Authenticated connections only');
       console.log('\n✅ Server is ready to accept connections!\n');
     });
   } catch (error) {

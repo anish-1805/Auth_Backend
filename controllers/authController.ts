@@ -1,13 +1,24 @@
 import { Response } from 'express';
 import UserModel from '../models/userModel.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
-import { generateToken, getCookieOptions, getClearCookieOptions } from '../utils/jwt.js';
+import {
+  generateToken,
+  getCookieOptions,
+  getClearCookieOptions,
+} from '../utils/jwt.js';
 import { generateOTPWithExpiry, verifyOTP } from '../utils/otp.js';
-import { sendSignupOTP, sendPasswordResetOTP, sendPasswordResetSuccess } from '../services/emailService.js';
+import {
+  sendSignupOTP,
+  sendPasswordResetOTP,
+  sendPasswordResetSuccess,
+} from '../services/emailService.js';
 import { AuthRequest } from '../types/index.js';
 
 // Signup controller - Step 1: Create user and send OTP
-export const signup = async (req: AuthRequest, res: Response): Promise<void> => {
+export const signup = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { name, email, password } = req.body;
 
@@ -19,11 +30,11 @@ export const signup = async (req: AuthRequest, res: Response): Promise<void> => 
         // User exists from social login but has no password
         // Allow them to set a password and convert to hybrid account
         const hashedPassword = await hashPassword(password);
-        
+
         await UserModel.updateById(existingUser.id, {
           password: hashedPassword,
           provider: 'local', // Change provider to local
-          name: name.trim() // Update name if provided
+          name: name.trim(), // Update name if provided
         });
 
         // Generate OTP for email verification
@@ -34,23 +45,30 @@ export const signup = async (req: AuthRequest, res: Response): Promise<void> => 
         sendSignupOTP(email, name, otpData.otp)
           .then((emailSent) => {
             if (emailSent) {
-              console.log(`✅ Signup OTP email sent to social login user: ${email}`);
+              console.log(
+                `✅ Signup OTP email sent to social login user: ${email}`
+              );
             }
           })
           .catch((error) => {
-            const errorMsg = error instanceof Error ? error.message : String(error);
-            console.error(`❌ Error sending OTP to social login user ${email}:`, errorMsg);
+            const errorMsg =
+              error instanceof Error ? error.message : String(error);
+            console.error(
+              `❌ Error sending OTP to social login user ${email}:`,
+              errorMsg
+            );
           });
 
         res.status(200).json({
           success: true,
-          message: 'Password set successfully for your Google account. Please verify your email with the OTP sent.',
+          message:
+            'Password set successfully for your Google account. Please verify your email with the OTP sent.',
           data: {
             email: email,
             otpSent: true,
             expiresIn: '5 minutes',
-            accountLinked: true
-          }
+            accountLinked: true,
+          },
         });
         return;
       }
@@ -58,7 +76,7 @@ export const signup = async (req: AuthRequest, res: Response): Promise<void> => 
       // User exists with regular signup
       res.status(409).json({
         success: false,
-        message: 'User with this email already exists'
+        message: 'User with this email already exists',
       });
       return;
     }
@@ -70,14 +88,14 @@ export const signup = async (req: AuthRequest, res: Response): Promise<void> => 
     const userData = {
       name: name.trim(),
       email: email.toLowerCase().trim(),
-      password: hashedPassword
+      password: hashedPassword,
     };
 
     await UserModel.create(userData);
 
     // Generate OTP
     const otpData = generateOTPWithExpiry(5); // 5 minutes expiry
-    
+
     // Store OTP in user record
     await UserModel.storeSignupOTP(email, otpData);
 
@@ -92,25 +110,30 @@ export const signup = async (req: AuthRequest, res: Response): Promise<void> => 
       })
       .catch((error) => {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        console.error(`❌ Error sending signup OTP email to ${email}:`, errorMsg);
+        console.error(
+          `❌ Error sending signup OTP email to ${email}:`,
+          errorMsg
+        );
       });
 
     // Respond immediately without waiting for email
     res.status(201).json({
       success: true,
-      message: 'Account created successfully. Please check your email for the verification code.',
+      message:
+        'Account created successfully. Please check your email for the verification code.',
       data: {
         email: email,
         otpSent: true,
-        expiresIn: '5 minutes'
-      }
+        expiresIn: '5 minutes',
+      },
     });
   } catch (error) {
     console.error('Signup error:', error);
-    const errorMsg = error instanceof Error ? error.message : 'Internal server error';
+    const errorMsg =
+      error instanceof Error ? error.message : 'Internal server error';
     res.status(500).json({
       success: false,
-      message: errorMsg
+      message: errorMsg,
     });
   }
 };
@@ -125,7 +148,7 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
     if (!user) {
       res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid email or password',
       });
       return;
     }
@@ -134,9 +157,10 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
     if (user.isSocialLogin && !user.password) {
       res.status(400).json({
         success: false,
-        message: 'This account was created using Google login. Please sign in with Google or set a password by signing up again.',
+        message:
+          'This account was created using Google login. Please sign in with Google or set a password by signing up again.',
         isSocialLogin: true,
-        provider: user.provider
+        provider: user.provider,
       });
       return;
     }
@@ -145,9 +169,10 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
     if (!user.isEmailVerified) {
       res.status(403).json({
         success: false,
-        message: 'Please verify your email before logging in. Check your inbox for the verification code.',
+        message:
+          'Please verify your email before logging in. Check your inbox for the verification code.',
         requiresEmailVerification: true,
-        email: user.email
+        email: user.email,
       });
       return;
     }
@@ -157,7 +182,7 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
     if (!isPasswordValid) {
       res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid email or password',
       });
       return;
     }
@@ -165,7 +190,7 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
     // Generate JWT token
     const token = generateToken({
       userId: user.id,
-      email: user.email
+      email: user.email,
     });
 
     // Set JWT as httpOnly cookie
@@ -178,22 +203,24 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
     res.status(200).json({
       success: true,
       message: 'Login successful',
-      user: userResponse
+      user: userResponse,
     });
-
   } catch (error) {
     console.error('Login error:', error);
     const errorMsg = error instanceof Error ? error.message : undefined;
     res.status(500).json({
       success: false,
       message: 'Internal server error during login',
-      error: process.env.NODE_ENV === 'development' ? errorMsg : undefined
+      error: process.env.NODE_ENV === 'development' ? errorMsg : undefined,
     });
   }
 };
 
 // Logout controller
-export const logout = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const logout = async (
+  _req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     // Clear JWT cookie
     const clearOptions = getClearCookieOptions();
@@ -201,42 +228,46 @@ export const logout = async (_req: AuthRequest, res: Response): Promise<void> =>
 
     res.status(200).json({
       success: true,
-      message: 'Logout successful'
+      message: 'Logout successful',
     });
-
   } catch (error) {
     console.error('Logout error:', error);
     const errorMsg = error instanceof Error ? error.message : undefined;
     res.status(500).json({
       success: false,
       message: 'Internal server error during logout',
-      error: process.env.NODE_ENV === 'development' ? errorMsg : undefined
+      error: process.env.NODE_ENV === 'development' ? errorMsg : undefined,
     });
   }
 };
 
 // Get current user controller
-export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getCurrentUser = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     // User info is already attached by auth middleware
     res.status(200).json({
       success: true,
-      user: req.user
+      user: req.user,
     });
-
   } catch (error) {
     console.error('Get current user error:', error);
     const errorMsg = error instanceof Error ? error.message : undefined;
     res.status(500).json({
       success: false,
       message: 'Internal server error',
-      error: process.env.NODE_ENV === 'development' ? errorMsg : undefined
+      error: process.env.NODE_ENV === 'development' ? errorMsg : undefined,
     });
   }
 };
 
 // Change password controller
-export const changePassword = async (req: AuthRequest, res: Response): Promise<void> => {
+export const changePassword = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { currentPassword, newPassword } = req.body;
     const userId = req.user!.id;
@@ -246,17 +277,20 @@ export const changePassword = async (req: AuthRequest, res: Response): Promise<v
     if (!user) {
       res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
       return;
     }
 
     // Verify current password
-    const isCurrentPasswordValid = await comparePassword(currentPassword, user.password!);
+    const isCurrentPasswordValid = await comparePassword(
+      currentPassword,
+      user.password!
+    );
     if (!isCurrentPasswordValid) {
       res.status(401).json({
         success: false,
-        message: 'Current password is incorrect'
+        message: 'Current password is incorrect',
       });
       return;
     }
@@ -266,7 +300,7 @@ export const changePassword = async (req: AuthRequest, res: Response): Promise<v
     if (isSamePassword) {
       res.status(400).json({
         success: false,
-        message: 'New password must be different from current password'
+        message: 'New password must be different from current password',
       });
       return;
     }
@@ -276,27 +310,29 @@ export const changePassword = async (req: AuthRequest, res: Response): Promise<v
 
     // Update user password
     await UserModel.updateById(userId, {
-      password: hashedNewPassword
+      password: hashedNewPassword,
     });
 
     res.status(200).json({
       success: true,
-      message: 'Password changed successfully'
+      message: 'Password changed successfully',
     });
-
   } catch (error) {
     console.error('Change password error:', error);
     const errorMsg = error instanceof Error ? error.message : undefined;
     res.status(500).json({
       success: false,
       message: 'Internal server error during password change',
-      error: process.env.NODE_ENV === 'development' ? errorMsg : undefined
+      error: process.env.NODE_ENV === 'development' ? errorMsg : undefined,
     });
   }
 };
 
 // Update profile controller
-export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateProfile = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { name, email } = req.body;
     const userId = req.user!.id;
@@ -307,7 +343,7 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
       if (existingUser && existingUser.id !== userId) {
         res.status(409).json({
           success: false,
-          message: 'Email is already taken by another user'
+          message: 'Email is already taken by another user',
         });
         return;
       }
@@ -327,30 +363,32 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
-      user: userResponse
+      user: userResponse,
     });
-
   } catch (error) {
     console.error('Update profile error:', error);
     const errorMsg = error instanceof Error ? error.message : undefined;
     res.status(500).json({
       success: false,
       message: 'Internal server error during profile update',
-      error: process.env.NODE_ENV === 'development' ? errorMsg : undefined
+      error: process.env.NODE_ENV === 'development' ? errorMsg : undefined,
     });
   }
 };
 
 // Refresh token controller
-export const refreshToken = async (req: AuthRequest, res: Response): Promise<void> => {
+export const refreshToken = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     // Get current token from cookies
     const currentToken = req.cookies.jwt;
-    
+
     if (!currentToken) {
       res.status(401).json({
         success: false,
-        message: 'No token provided'
+        message: 'No token provided',
       });
       return;
     }
@@ -361,7 +399,7 @@ export const refreshToken = async (req: AuthRequest, res: Response): Promise<voi
     // Generate new token
     const newToken = generateToken({
       userId: userId,
-      email: req.user!.email
+      email: req.user!.email,
     });
 
     // Set new JWT as httpOnly cookie
@@ -370,29 +408,31 @@ export const refreshToken = async (req: AuthRequest, res: Response): Promise<voi
 
     res.status(200).json({
       success: true,
-      message: 'Token refreshed successfully'
+      message: 'Token refreshed successfully',
     });
-
   } catch (error) {
     console.error('Refresh token error:', error);
     const errorMsg = error instanceof Error ? error.message : undefined;
     res.status(500).json({
       success: false,
       message: 'Internal server error during token refresh',
-      error: process.env.NODE_ENV === 'development' ? errorMsg : undefined
+      error: process.env.NODE_ENV === 'development' ? errorMsg : undefined,
     });
   }
 };
 
 // Verify signup OTP controller
-export const verifySignupOTP = async (req: AuthRequest, res: Response): Promise<void> => {
+export const verifySignupOTP = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { email, otp } = req.body;
 
     if (!email || !otp) {
       res.status(400).json({
         success: false,
-        message: 'Email and OTP are required'
+        message: 'Email and OTP are required',
       });
       return;
     }
@@ -402,7 +442,7 @@ export const verifySignupOTP = async (req: AuthRequest, res: Response): Promise<
     if (!user) {
       res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
       return;
     }
@@ -411,7 +451,7 @@ export const verifySignupOTP = async (req: AuthRequest, res: Response): Promise<
     if (user.isEmailVerified) {
       res.status(400).json({
         success: false,
-        message: 'Email is already verified'
+        message: 'Email is already verified',
       });
       return;
     }
@@ -420,13 +460,17 @@ export const verifySignupOTP = async (req: AuthRequest, res: Response): Promise<
     if (!user.signupOTP) {
       res.status(400).json({
         success: false,
-        message: 'No OTP found. Please request a new one.'
+        message: 'No OTP found. Please request a new one.',
       });
       return;
     }
 
     // Verify OTP
-    const signupOTPData = user.signupOTP as { otp: string; expiryTime: string; isUsed: boolean };
+    const signupOTPData = user.signupOTP as {
+      otp: string;
+      expiryTime: string;
+      isUsed: boolean;
+    };
     const otpVerification = verifyOTP(
       otp,
       signupOTPData.otp,
@@ -437,7 +481,7 @@ export const verifySignupOTP = async (req: AuthRequest, res: Response): Promise<
     if (!otpVerification.isValid) {
       res.status(400).json({
         success: false,
-        message: otpVerification.error
+        message: otpVerification.error,
       });
       return;
     }
@@ -448,7 +492,7 @@ export const verifySignupOTP = async (req: AuthRequest, res: Response): Promise<
     // Generate JWT token for automatic login
     const token = generateToken({
       userId: updatedUser.id,
-      email: updatedUser.email
+      email: updatedUser.email,
     });
 
     // Set JWT as httpOnly cookie
@@ -462,33 +506,36 @@ export const verifySignupOTP = async (req: AuthRequest, res: Response): Promise<
         id: updatedUser.id,
         name: updatedUser.name,
         email: updatedUser.email,
-        isEmailVerified: updatedUser.isEmailVerified
+        isEmailVerified: updatedUser.isEmailVerified,
       },
       data: {
         emailVerified: true,
-        autoLogin: true
-      }
+        autoLogin: true,
+      },
     });
-
   } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : 'Internal server error';
+    const errorMsg =
+      error instanceof Error ? error.message : 'Internal server error';
     console.error('Verify signup OTP error:', errorMsg);
     res.status(500).json({
       success: false,
-      message: errorMsg
+      message: errorMsg,
     });
   }
 };
 
 // Resend signup OTP controller
-export const resendSignupOTP = async (req: AuthRequest, res: Response): Promise<void> => {
+export const resendSignupOTP = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { email } = req.body;
 
     if (!email) {
       res.status(400).json({
         success: false,
-        message: 'Email is required'
+        message: 'Email is required',
       });
       return;
     }
@@ -498,7 +545,7 @@ export const resendSignupOTP = async (req: AuthRequest, res: Response): Promise<
     if (!user) {
       res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
       return;
     }
@@ -507,14 +554,14 @@ export const resendSignupOTP = async (req: AuthRequest, res: Response): Promise<
     if (user.isEmailVerified) {
       res.status(400).json({
         success: false,
-        message: 'Email is already verified'
+        message: 'Email is already verified',
       });
       return;
     }
 
     // Generate new OTP
     const otpData = generateOTPWithExpiry(5);
-    
+
     // Store new OTP
     await UserModel.storeSignupOTP(email, otpData);
 
@@ -522,14 +569,19 @@ export const resendSignupOTP = async (req: AuthRequest, res: Response): Promise<
     sendSignupOTP(email, user.name, otpData.otp)
       .then((emailSent) => {
         if (emailSent) {
-          console.log(`✅ Resend signup OTP email sent successfully to: ${email}`);
+          console.log(
+            `✅ Resend signup OTP email sent successfully to: ${email}`
+          );
         } else {
           console.error(`❌ Failed to resend signup OTP email to: ${email}`);
         }
       })
       .catch((error) => {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        console.error(`❌ Error resending signup OTP email to ${email}:`, errorMsg);
+        console.error(
+          `❌ Error resending signup OTP email to ${email}:`,
+          errorMsg
+        );
       });
 
     // Respond immediately without waiting for email
@@ -539,29 +591,32 @@ export const resendSignupOTP = async (req: AuthRequest, res: Response): Promise<
       data: {
         email: email,
         otpSent: true,
-        expiresIn: '5 minutes'
-      }
+        expiresIn: '5 minutes',
+      },
     });
-
   } catch (error) {
     console.error('Resend signup OTP error:', error);
-    const errorMsg = error instanceof Error ? error.message : 'Internal server error';
+    const errorMsg =
+      error instanceof Error ? error.message : 'Internal server error';
     res.status(500).json({
       success: false,
-      message: errorMsg
+      message: errorMsg,
     });
   }
 };
 
 // Forgot password controller - Step 1: Send OTP
-export const forgotPassword = async (req: AuthRequest, res: Response): Promise<void> => {
+export const forgotPassword = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { email } = req.body;
 
     if (!email) {
       res.status(400).json({
         success: false,
-        message: 'Email is required'
+        message: 'Email is required',
       });
       return;
     }
@@ -572,11 +627,12 @@ export const forgotPassword = async (req: AuthRequest, res: Response): Promise<v
       // Don't reveal if user exists or not for security
       res.status(200).json({
         success: true,
-        message: 'If an account with this email exists, you will receive a password reset code.',
+        message:
+          'If an account with this email exists, you will receive a password reset code.',
         data: {
           email: email,
-          otpSent: true
-        }
+          otpSent: true,
+        },
       });
       return;
     }
@@ -585,14 +641,14 @@ export const forgotPassword = async (req: AuthRequest, res: Response): Promise<v
     if (!user.isEmailVerified) {
       res.status(400).json({
         success: false,
-        message: 'Please verify your email first before resetting password.'
+        message: 'Please verify your email first before resetting password.',
       });
       return;
     }
 
     // Generate OTP
     const otpData = generateOTPWithExpiry(5);
-    
+
     // Store OTP
     await UserModel.storePasswordResetOTP(email, otpData);
 
@@ -600,14 +656,21 @@ export const forgotPassword = async (req: AuthRequest, res: Response): Promise<v
     sendPasswordResetOTP(email, user.name, otpData.otp)
       .then((emailSent) => {
         if (emailSent) {
-          console.log(`✅ Password reset OTP email sent successfully to: ${email}`);
+          console.log(
+            `✅ Password reset OTP email sent successfully to: ${email}`
+          );
         } else {
-          console.error(`❌ Failed to send password reset OTP email to: ${email}`);
+          console.error(
+            `❌ Failed to send password reset OTP email to: ${email}`
+          );
         }
       })
       .catch((error) => {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        console.error(`❌ Error sending password reset OTP email to ${email}:`, errorMsg);
+        console.error(
+          `❌ Error sending password reset OTP email to ${email}:`,
+          errorMsg
+        );
       });
 
     // Respond immediately without waiting for email
@@ -617,29 +680,32 @@ export const forgotPassword = async (req: AuthRequest, res: Response): Promise<v
       data: {
         email: email,
         otpSent: true,
-        expiresIn: '5 minutes'
-      }
+        expiresIn: '5 minutes',
+      },
     });
-
   } catch (error) {
     console.error('Forgot password error:', error);
-    const errorMsg = error instanceof Error ? error.message : 'Internal server error';
+    const errorMsg =
+      error instanceof Error ? error.message : 'Internal server error';
     res.status(500).json({
       success: false,
-      message: errorMsg
+      message: errorMsg,
     });
   }
 };
 
 // Verify password reset OTP controller
-export const verifyPasswordResetOTP = async (req: AuthRequest, res: Response): Promise<void> => {
+export const verifyPasswordResetOTP = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { email, otp } = req.body;
 
     if (!email || !otp) {
       res.status(400).json({
         success: false,
-        message: 'Email and OTP are required'
+        message: 'Email and OTP are required',
       });
       return;
     }
@@ -649,7 +715,7 @@ export const verifyPasswordResetOTP = async (req: AuthRequest, res: Response): P
     if (!user) {
       res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
       return;
     }
@@ -658,13 +724,17 @@ export const verifyPasswordResetOTP = async (req: AuthRequest, res: Response): P
     if (!user.passwordResetOTP) {
       res.status(400).json({
         success: false,
-        message: 'No password reset OTP found. Please request a new one.'
+        message: 'No password reset OTP found. Please request a new one.',
       });
       return;
     }
 
     // Verify OTP
-    const passwordResetOTPData = user.passwordResetOTP as { otp: string; expiryTime: string; isUsed: boolean };
+    const passwordResetOTPData = user.passwordResetOTP as {
+      otp: string;
+      expiryTime: string;
+      isUsed: boolean;
+    };
     const otpVerification = verifyOTP(
       otp,
       passwordResetOTPData.otp,
@@ -675,7 +745,7 @@ export const verifyPasswordResetOTP = async (req: AuthRequest, res: Response): P
     if (!otpVerification.isValid) {
       res.status(400).json({
         success: false,
-        message: otpVerification.error
+        message: otpVerification.error,
       });
       return;
     }
@@ -688,29 +758,32 @@ export const verifyPasswordResetOTP = async (req: AuthRequest, res: Response): P
       message: 'OTP verified successfully. You can now reset your password.',
       data: {
         otpVerified: true,
-        email: email
-      }
+        email: email,
+      },
     });
-
   } catch (error) {
     console.error('Verify password reset OTP error:', error);
-    const errorMsg = error instanceof Error ? error.message : 'Internal server error';
+    const errorMsg =
+      error instanceof Error ? error.message : 'Internal server error';
     res.status(500).json({
       success: false,
-      message: errorMsg
+      message: errorMsg,
     });
   }
 };
 
 // Reset password controller - Step 2: Reset password after OTP verification
-export const resetPassword = async (req: AuthRequest, res: Response): Promise<void> => {
+export const resetPassword = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { email, otp, newPassword } = req.body;
 
     if (!email || !otp || !newPassword) {
       res.status(400).json({
         success: false,
-        message: 'Email, OTP, and new password are required'
+        message: 'Email, OTP, and new password are required',
       });
       return;
     }
@@ -720,17 +793,21 @@ export const resetPassword = async (req: AuthRequest, res: Response): Promise<vo
     if (!user) {
       res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
       return;
     }
 
     // Check if OTP exists and is used (verified)
-    const resetOTPData = user.passwordResetOTP as { otp: string; expiryTime: string; isUsed: boolean } | null;
+    const resetOTPData = user.passwordResetOTP as {
+      otp: string;
+      expiryTime: string;
+      isUsed: boolean;
+    } | null;
     if (!resetOTPData || !resetOTPData.isUsed) {
       res.status(400).json({
         success: false,
-        message: 'Please verify OTP first before resetting password.'
+        message: 'Please verify OTP first before resetting password.',
       });
       return;
     }
@@ -746,7 +823,7 @@ export const resetPassword = async (req: AuthRequest, res: Response): Promise<vo
     if (!otpVerification.isValid) {
       res.status(400).json({
         success: false,
-        message: 'OTP has expired. Please request a new password reset.'
+        message: 'OTP has expired. Please request a new password reset.',
       });
       return;
     }
@@ -756,7 +833,7 @@ export const resetPassword = async (req: AuthRequest, res: Response): Promise<vo
 
     // Update password
     await UserModel.updateById(user.id, {
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     // Clear OTP data
@@ -768,28 +845,34 @@ export const resetPassword = async (req: AuthRequest, res: Response): Promise<vo
         if (emailSent) {
           console.log(`✅ Password reset success email sent to: ${email}`);
         } else {
-          console.error(`❌ Failed to send password reset success email to: ${email}`);
+          console.error(
+            `❌ Failed to send password reset success email to: ${email}`
+          );
         }
       })
       .catch((error) => {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        console.error(`❌ Error sending password reset success email to ${email}:`, errorMsg);
+        console.error(
+          `❌ Error sending password reset success email to ${email}:`,
+          errorMsg
+        );
       });
 
     res.status(200).json({
       success: true,
-      message: 'Password reset successfully. You can now log in with your new password.',
+      message:
+        'Password reset successfully. You can now log in with your new password.',
       data: {
-        passwordReset: true
-      }
+        passwordReset: true,
+      },
     });
-
   } catch (error) {
     console.error('Reset password error:', error);
-    const errorMsg = error instanceof Error ? error.message : 'Internal server error';
+    const errorMsg =
+      error instanceof Error ? error.message : 'Internal server error';
     res.status(500).json({
       success: false,
-      message: errorMsg
+      message: errorMsg,
     });
   }
 };

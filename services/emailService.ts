@@ -11,8 +11,8 @@ const EMAIL_CONFIG: EmailConfig = {
   secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
+    pass: process.env.EMAIL_PASS,
+  },
 };
 
 // Create transporter
@@ -33,7 +33,11 @@ try {
  * @param {string} otp - 6-digit OTP
  * @returns {Promise<boolean>} Success status
  */
-export const sendSignupOTP = async (email: string, name: string, otp: string): Promise<boolean> => {
+export const sendSignupOTP = async (
+  email: string,
+  name: string,
+  otp: string
+): Promise<boolean> => {
   try {
     if (!transporter) {
       throw new Error('Email service not configured');
@@ -92,7 +96,7 @@ export const sendSignupOTP = async (email: string, name: string, otp: string): P
           </div>
         </body>
         </html>
-      `
+      `,
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -112,7 +116,11 @@ export const sendSignupOTP = async (email: string, name: string, otp: string): P
  * @param {string} otp - 6-digit OTP
  * @returns {Promise<boolean>} Success status
  */
-export const sendPasswordResetOTP = async (email: string, name: string, otp: string): Promise<boolean> => {
+export const sendPasswordResetOTP = async (
+  email: string,
+  name: string,
+  otp: string
+): Promise<boolean> => {
   try {
     if (!transporter) {
       throw new Error('Email service not configured');
@@ -175,7 +183,7 @@ export const sendPasswordResetOTP = async (email: string, name: string, otp: str
           </div>
         </body>
         </html>
-      `
+      `,
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -194,7 +202,10 @@ export const sendPasswordResetOTP = async (email: string, name: string, otp: str
  * @param {string} name - Recipient name
  * @returns {Promise<boolean>} Success status
  */
-export const sendPasswordResetSuccess = async (email: string, name: string): Promise<boolean> => {
+export const sendPasswordResetSuccess = async (
+  email: string,
+  name: string
+): Promise<boolean> => {
   try {
     if (!transporter) {
       throw new Error('Email service not configured');
@@ -241,7 +252,7 @@ export const sendPasswordResetSuccess = async (email: string, name: string): Pro
           </div>
         </body>
         </html>
-      `
+      `,
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -249,7 +260,10 @@ export const sendPasswordResetSuccess = async (email: string, name: string): Pro
     return true;
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error('Failed to send password reset success notification:', errorMsg);
+    console.error(
+      'Failed to send password reset success notification:',
+      errorMsg
+    );
     return false;
   }
 };
@@ -263,7 +277,7 @@ export const testEmailConnection = async (): Promise<boolean> => {
     if (!transporter) {
       return false;
     }
-    
+
     await transporter.verify();
     console.log('Email service is ready');
     return true;

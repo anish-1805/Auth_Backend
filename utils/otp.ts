@@ -1,5 +1,9 @@
 import crypto from 'crypto';
-import { OTPData, OTPVerificationResult, OTPRemainingTime } from '../types/index.js';
+import {
+  OTPData,
+  OTPVerificationResult,
+  OTPRemainingTime,
+} from '../types/index.js';
 
 /**
  * Generate a secure 6-digit OTP
@@ -19,11 +23,11 @@ export const generateOTP = (): string => {
 export const generateOTPWithExpiry = (expiryMinutes: number = 5): OTPData => {
   const otp = generateOTP();
   const expiryTime = new Date(Date.now() + expiryMinutes * 60 * 1000);
-  
+
   return {
     otp,
     expiryTime: expiryTime.toISOString(),
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   };
 };
 
@@ -45,7 +49,7 @@ export const verifyOTP = (
   if (isUsed) {
     return {
       isValid: false,
-      error: 'OTP has already been used'
+      error: 'OTP has already been used',
     };
   }
 
@@ -53,24 +57,24 @@ export const verifyOTP = (
   if (inputOTP !== storedOTP) {
     return {
       isValid: false,
-      error: 'Invalid OTP'
+      error: 'Invalid OTP',
     };
   }
 
   // Check if OTP has expired
   const now = new Date();
   const expiry = new Date(expiryTime);
-  
+
   if (now > expiry) {
     return {
       isValid: false,
-      error: 'OTP has expired'
+      error: 'OTP has expired',
     };
   }
 
   return {
     isValid: true,
-    error: null
+    error: null,
   };
 };
 
@@ -102,13 +106,13 @@ export const getOTPRemainingTime = (expiryTime: string): OTPRemainingTime => {
   const now = new Date();
   const expiry = new Date(expiryTime);
   const diff = expiry.getTime() - now.getTime();
-  
+
   if (diff <= 0) {
     return { minutes: 0, seconds: 0, expired: true };
   }
-  
+
   const minutes = Math.floor(diff / (1000 * 60));
   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-  
+
   return { minutes, seconds, expired: false };
 };
