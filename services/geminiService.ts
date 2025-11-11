@@ -1,8 +1,8 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 
 class GeminiService {
   private genAI: GoogleGenerativeAI | null = null;
-  private model: any = null;
+  private model: GenerativeModel | null = null;
 
   constructor() {
     this.initialize();
