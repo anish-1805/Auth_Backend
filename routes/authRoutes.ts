@@ -12,6 +12,7 @@ import {
   forgotPassword,
   verifyPasswordResetOTP,
   resetPassword,
+  getAllUsers,
 } from '../controllers/authController.js';
 import {
   googleAuth,
@@ -121,6 +122,13 @@ router.put(
   authenticateToken as RequestHandler,
   validateRequest(updateProfileSchema) as RequestHandler,
   updateProfile as RequestHandler
+);
+
+// Get all users (protected route)
+router.get(
+  '/users',
+  authenticateToken as RequestHandler,
+  getAllUsers as RequestHandler
 );
 
 // Socket token route (for Socket.IO authentication)

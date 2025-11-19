@@ -876,3 +876,55 @@ export const resetPassword = async (
     });
   }
 };
+
+// Get all users with pagination (admin/protected endpoint)
+export const getAllUsers = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get total count
+    const total = await UserModel.count();
+
+    // Get paginated users
+    const users = await UserModel.findAll(skip, limit);
+
+    // Remove sensitive data (password) from response
+    const sanitizedUsers = users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      isEmailVerified: user.isEmailVerified,
+      provider: user.provider,
+      avatar: user.avatar,
+      isSocialLogin: user.isSocialLogin,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }));
+
+    const totalPages = Math.ceil(total / limit);
+    const hasMore = page < totalPages;
+
+    res.status(200).json({
+      success: true,
+      users: sanitizedUsers,
+      total,
+      page,
+      limit,
+      totalPages,
+      hasMore,
+    });
+  } catch (error) {
+    console.error('Get all users error:', error);
+    const errorMsg =
+      error instanceof Error ? error.message : 'Internal server error';
+    res.status(500).json({
+      success: false,
+      message: errorMsg,
+    });
+  }
+};

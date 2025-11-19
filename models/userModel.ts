@@ -125,10 +125,12 @@ class UserModel {
     }
   }
 
-  // Get all users (for admin purposes)
-  static async findAll(): Promise<User[]> {
+  // Get all users with pagination (for admin purposes)
+  static async findAll(skip: number = 0, take: number = 10): Promise<User[]> {
     try {
       return await prisma.user.findMany({
+        skip,
+        take,
         orderBy: { createdAt: 'desc' },
       });
     } catch (error) {
