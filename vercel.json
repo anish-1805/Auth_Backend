@@ -36,10 +36,5 @@
     "GEMINI_API_KEY": "@gemini_api_key",
     "EMAIL_USER": "@email_user",
     "EMAIL_PASS": "@email_pass"
-  },
-  "functions": {
-    "server.ts": {
-      "runtime": "nodejs18.x"
-    }
   }
 }
