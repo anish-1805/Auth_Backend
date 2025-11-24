@@ -928,3 +928,79 @@ export const getAllUsers = async (
     });
   }
 };
+
+// Delete multiple users (admin/protected endpoint)
+export const deleteUsers = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { userIds } = req.body;
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      res.status(400).json({
+        success: false,
+        message: 'User IDs array is required and cannot be empty',
+      });
+      return;
+    }
+
+    // Validate that all userIds are strings
+    if (!userIds.every((id) => typeof id === 'string')) {
+      res.status(400).json({
+        success: false,
+        message: 'All user IDs must be valid strings',
+      });
+      return;
+    }
+
+    // Prevent self-deletion (if current user ID is in the list)
+    const currentUserId = req.user?.id;
+    if (currentUserId && userIds.includes(currentUserId)) {
+      res.status(400).json({
+        success: false,
+        message: 'You cannot delete your own account',
+      });
+      return;
+    }
+
+    const failedDeletions: string[] = [];
+    let deletedCount = 0;
+
+    // Delete users one by one to handle individual failures
+    for (const userId of userIds) {
+      try {
+        const deleted = await UserModel.deleteById(userId);
+        if (deleted) {
+          deletedCount++;
+        } else {
+          failedDeletions.push(userId);
+        }
+      } catch (error) {
+        console.error(`Failed to delete user ${userId}:`, error);
+        failedDeletions.push(userId);
+      }
+    }
+
+    const response: any = {
+      success: true,
+      message: `Successfully deleted ${deletedCount} user(s)`,
+      deletedCount,
+    };
+
+    if (failedDeletions.length > 0) {
+      response.failedDeletions = failedDeletions;
+      response.message += `. Failed to delete ${failedDeletions.length} user(s)`;
+    }
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error('Delete users error:', error);
+    const errorMsg =
+      error instanceof Error ? error.message : 'Internal server error';
+    res.status(500).json({
+      success: false,
+      message: errorMsg,
+    });
+  }
+};

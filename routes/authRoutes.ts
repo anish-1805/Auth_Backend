@@ -13,6 +13,7 @@ import {
   verifyPasswordResetOTP,
   resetPassword,
   getAllUsers,
+  deleteUsers,
 } from '../controllers/authController.js';
 import {
   googleAuth,
@@ -129,6 +130,13 @@ router.get(
   '/users',
   authenticateToken as RequestHandler,
   getAllUsers as RequestHandler
+);
+
+// Delete multiple users (protected route)
+router.delete(
+  '/users/delete',
+  authenticateToken as RequestHandler,
+  deleteUsers as RequestHandler
 );
 
 // Socket token route (for Socket.IO authentication)
